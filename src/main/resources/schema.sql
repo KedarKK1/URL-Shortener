@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS urls (
+    id UUID PRIMARY KEY,
+    target_url VARCHAR(2048) NOT NULL,
+    alias VARCHAR(64) NOT NULL UNIQUE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP,
+    click_count BIGINT NOT NULL DEFAULT 0
+);
