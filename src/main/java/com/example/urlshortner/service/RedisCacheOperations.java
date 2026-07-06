@@ -2,17 +2,19 @@ package com.example.urlshortner.service;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@RequiredArgsConstructor
-@Slf4j
 public class RedisCacheOperations implements CacheOperations {
 
+    private static final Logger log = LoggerFactory.getLogger(RedisCacheOperations.class);
     private final StringRedisTemplate redisTemplate;
+
+    public RedisCacheOperations(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public String get(String key) {

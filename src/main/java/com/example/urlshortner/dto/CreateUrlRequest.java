@@ -1,9 +1,10 @@
 package com.example.urlshortner.dto;
 
+import java.time.Instant;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.time.Instant;
 
 public record CreateUrlRequest(
         @NotBlank(message = "targetUrl is required")
