@@ -2,16 +2,22 @@ package com.example.urlshortner.service;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.urlshortner.domain.UrlEntity;
 import com.example.urlshortner.dto.CreateUrlRequest;
 import com.example.urlshortner.dto.UpdateUrlRequest;
+import com.example.urlshortner.dto.UrlAnalyticsResponse;
 import com.example.urlshortner.dto.UrlResponse;
 import com.example.urlshortner.exception.AliasAlreadyExistsException;
 import com.example.urlshortner.exception.ExpiredUrlException;
@@ -20,14 +26,10 @@ import com.example.urlshortner.repository.UrlRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class UrlService {
 
+    private static final Logger log = LoggerFactory.getLogger(UrlService.class);
     private static final String DETAILS_CACHE_PREFIX = "url:details:";
     private static final String REDIRECT_CACHE_PREFIX = "url:redirect:";
     private static final String CLICK_TOPIC = "url-click-events";
@@ -36,6 +38,14 @@ public class UrlService {
     private final CacheOperations cacheOperations;
     private final ClickEventPublisher clickEventPublisher;
     private final ObjectMapper objectMapper;
+
+    public UrlService(UrlRepository repository, CacheOperations cacheOperations, ClickEventPublisher clickEventPublisher,
+            ObjectMapper objectMapper) {
+        this.repository = repository;
+        this.cacheOperations = cacheOperations;
+        this.clickEventPublisher = clickEventPublisher;
+        this.objectMapper = objectMapper;
+    }
 
     @Transactional
     public UrlResponse createUrl(CreateUrlRequest request) {
@@ -53,7 +63,12 @@ public class UrlService {
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
 
-        UrlEntity saved = repository.save(entity);
+        UrlEntity saved;
+        try {
+            saved = repository.saveAndFlush(entity);
+        } catch (DataIntegrityViolationException ex) {
+            throw new AliasAlreadyExistsException("alias already exists", ex);
+        }
         cacheDetails(saved);
         cacheRedirect(saved.getAlias(), saved.getTargetUrl());
         return mapToResponse(saved);
@@ -93,7 +108,12 @@ public class UrlService {
         entity.setExpiresAt(request.expiresAt());
         entity.setUpdatedAt(Instant.now());
 
-        UrlEntity saved = repository.save(entity);
+        UrlEntity saved;
+        try {
+            saved = repository.saveAndFlush(entity);
+        } catch (DataIntegrityViolationException ex) {
+            throw new AliasAlreadyExistsException("alias already exists", ex);
+        }
         evictCaches(saved.getId(), saved.getAlias());
         cacheDetails(saved);
         cacheRedirect(saved.getAlias(), saved.getTargetUrl());
@@ -108,16 +128,28 @@ public class UrlService {
         evictCaches(id, entity.getAlias());
     }
 
+    @Transactional(readOnly = true)
+    public List<UrlResponse> listUrls() {
+        return repository.findAll().stream()
+                .sorted(Comparator.comparing(UrlEntity::getCreatedAt).reversed())
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public UrlAnalyticsResponse getAnalytics() {
+        List<UrlEntity> entities = repository.findAll();
+        long activeCount = entities.stream().filter(e -> e.isActive() && !e.isExpired()).count();
+        long expiredCount = entities.stream().filter(e -> e.isActive() && e.isExpired()).count();
+        long totalClicks = entities.stream().mapToLong(UrlEntity::getClickCount).sum();
+        return new UrlAnalyticsResponse(entities.size(), activeCount, expiredCount, totalClicks);
+    }
+
     @Transactional
     public String redirectToTarget(String alias) {
         String normalizedAlias = normalizeAlias(alias);
         if (normalizedAlias == null) {
             throw new ResourceNotFoundException("url not found");
-        }
-
-        String cachedTarget = cacheOperations.get(REDIRECT_CACHE_PREFIX + normalizedAlias);
-        if (cachedTarget != null) {
-            return cachedTarget;
         }
 
         UrlEntity entity = repository.findByAlias(normalizedAlias)
@@ -132,10 +164,11 @@ public class UrlService {
 
         entity.setClickCount(entity.getClickCount() + 1);
         entity.setUpdatedAt(Instant.now());
-        repository.save(entity);
-        cacheRedirect(normalizedAlias, entity.getTargetUrl());
-        publishClickEvent(entity);
-        return entity.getTargetUrl();
+        UrlEntity saved = repository.saveAndFlush(entity);
+        evictCaches(saved.getId(), saved.getAlias());
+        cacheDetails(saved);
+        publishClickEvent(saved);
+        return saved.getTargetUrl();
     }
 
     private void validateTargetUrl(String targetUrl) {

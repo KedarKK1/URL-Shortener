@@ -1,0 +1,39 @@
+<div th:fragment="form(formModel, objectName, formAction, submitLabel, cancelUrl)">
+    <form th:action="${formAction}" th:object="${__${objectName}__}" method="post" class="row g-3">
+        <!-- Global/Submission Errors -->
+        <div class="col-12" th:if="${#fields.hasGlobalErrors()}">
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    <li th:each="err : ${#fields.globalErrors()}" th:text="${err}"></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <label class="form-label" for="targetUrl">Target URL</label>
+            <input type="text" id="targetUrl" class="form-control" placeholder="https://example.com"
+                   th:field="*{targetUrl}" th:classappend="${#fields.hasErrors('targetUrl')} ? 'is-invalid'" />
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('targetUrl')}" th:errors="*{targetUrl}"></div>
+        </div>
+        
+        <div class="col-md-4">
+            <label class="form-label" for="alias">Alias</label>
+            <input type="text" id="alias" class="form-control" placeholder="docs"
+                   th:field="*{alias}" th:classappend="${#fields.hasErrors('alias')} ? 'is-invalid'" />
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('alias')}" th:errors="*{alias}"></div>
+        </div>
+        
+        <div class="col-12">
+            <label class="form-label" for="expiresAt">Expires At</label>
+            <input type="datetime-local" id="expiresAt" name="expiresAt" class="form-control"
+                   th:value="${formModel != null && formModel.expiresAt != null ? #temporals.format(formModel.expiresAt.atZone(T(java.time.ZoneId).systemDefault()), 'yyyy-MM-dd''T''HH:mm') : ''}"
+                   th:classappend="${#fields.hasErrors('expiresAt')} ? 'is-invalid'" />
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('expiresAt')}" th:errors="*{expiresAt}"></div>
+        </div>
+        
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary" th:text="${submitLabel}"></button>
+            <a th:href="${cancelUrl}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,16 +1,18 @@
 package com.example.urlshortner.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@RequiredArgsConstructor
-@Slf4j
 public class KafkaClickEventPublisher implements ClickEventPublisher {
 
+    private static final Logger log = LoggerFactory.getLogger(KafkaClickEventPublisher.class);
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public KafkaClickEventPublisher(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Override
     public void publish(String topic, String payload) {

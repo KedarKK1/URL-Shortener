@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Analytics</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">Analytics</h1>
+            <p class="text-muted mb-0">Track URL activity and traffic.</p>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Total URLs</h5>
+                    <p class="card-text display-6" th:text="${analytics.totalUrls}"></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Active URLs</h5>
+                    <p class="card-text display-6" th:text="${analytics.activeUrls}"></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Expired URLs</h5>
+                    <p class="card-text display-6" th:text="${analytics.expiredUrls}"></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clicks</h5>
+                    <p class="card-text display-6" th:text="${analytics.totalClicks}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h5">URL Performance</h2>
+            <div th:if="${#lists.isEmpty(urls)}" class="text-muted">No URLs have been created yet.</div>
+            <div th:unless="${#lists.isEmpty(urls)}" class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                    <tr>
+                        <th>Alias</th>
+                        <th>Target URL</th>
+                        <th>Clicks</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="url : ${urls}">
+                        <td><code th:text="${url.alias}"></code></td>
+                        <td th:text="${url.targetUrl}"></td>
+                        <td th:text="${url.clickCount}"></td>
+                        <td>
+                            <span class="badge bg-success" th:if="${url.active and (url.expiresAt == null or !url.expiresAt.isBefore(T(java.time.Instant).now()))}">Active</span>
+                            <span class="badge bg-warning text-dark" th:if="${url.active and url.expiresAt != null and url.expiresAt.isBefore(T(java.time.Instant).now())}">Expired</span>
+                            <span class="badge bg-secondary" th:unless="${url.active}">Inactive</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
