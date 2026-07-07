@@ -50,7 +50,11 @@ Testing - Junit
 Containerization - Docker
 Skills - devops, senir-software-engineer
 Agents - devops, se-architect, senir-software-engineer
-Openspec for spec-driven-development - crud-api-for-url-shortner, server-side-thymeleaf-ui-for-url-shortener
+Openspec for spec-driven-development - crud-api-for-url-shortner, server-side-thymeleaf-ui-for-url-shortener, testing-spec
+
+### Project Structure, Architecture, System Design, Scenarios & Testing Approach
+
+- See [docs/copilot/architecture-and-testing.md](docs/copilot/architecture-and-testing.md) for Mermaid diagrams covering structure, architecture, system design, scenarios, testing, Limitations, and validation.
 
 ### Openspec commands
 
@@ -102,3 +106,30 @@ openspec list --changes
 openspec status --change <name-of-change-spec>
 openspec view
 openspec update
+
+## Project Features
+- Create, read, update, delete short URLs
+- Optional custon alias and expiration time
+- Redirect resolution with click counting
+- Redis-backed caching (optional, auto-falls back to noop)
+- Kafka click-event publishing (optional, auto-falls back to noop)
+- PostgreSQL persistence (configured via application YAML)
+- Thymeleaf server-rendered UI for dashboard and forms
+- Comprehensive unit/integration tests under `src/test`
+to validate behavior
+
+## Configuration
+Edit `src/main/resources/application.yaml` to provide profile-specific files
+`application-docker.yaml` to configure database, Redis, and Kafka settings.
+
+## Running Tests
+
+``bash
+./mvnw test
+``
+
+## Notes
+- If Redis or Kafka are not available, the application uses no-op implementations so core functionality still works.
+- See the openspec/changes/
+folder for change proposals, tasks, and specs used during
+development.
