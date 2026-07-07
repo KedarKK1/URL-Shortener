@@ -35,22 +35,22 @@ for compiling & testing
 ./mvnw -q -DskipTests compile
 ```
 
-App port - 8080
+App port - `8080`
 
-Open thymleaf dashboard at http://localhost:8080/ in your browser
+Open thymleaf dashboard at `http://localhost:8080/` in your browser
 
 ### Tech stack used 
 
-Backend - Java (21) Spring Boot
-Database - PostgreSQL
-Cache - Redis
-Messaging - Kafka
-Frontend - Thymeleaf
-Testing - Junit
-Containerization - Docker
-Skills - devops, senir-software-engineer
-Agents - devops, se-architect, senir-software-engineer
-Openspec for spec-driven-development - crud-api-for-url-shortner, server-side-thymeleaf-ui-for-url-shortener, testing-spec
+- Backend - Java (21) Spring Boot
+- Database - PostgreSQL
+- Cache - Redis
+- Messaging - Kafka
+- Frontend - Thymeleaf
+- Testing - Junit
+- Containerization - Docker
+- Skills - devops, senir-software-engineer
+- Agents - devops, se-architect, senir-software-engineer
+- Openspec for spec-driven-development - crud-api-for-url-shortner, server-side-thymeleaf-ui-for-url-shortener, testing-spec
 
 ### Project Structure, Architecture, System Design, Scenarios & Testing Approach
 
